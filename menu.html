@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Métodos Numéricos</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    h3 {
+      margin: 20px 0 10px;
+      color: #34495e;
+      border-left: 4px solid #3498db;
+      padding-left: 8px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    button:hover {
+      background: #2980b9;
+      transform: scale(1.05);
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    input {
+      padding: 8px;
+      margin: 5px 0 10px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: auto;
+      min-width: 120px;
+    }
+
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 5px rgba(52,152,219,0.4);
+    }
+
+    
+    #gauss, #bissecao {
+      display: none;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+   
+    table {
+      border-collapse: collapse;
+      margin: 15px 0;
+      width: auto;
+    }
+
+    td, th {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .matrix {
+      margin-bottom: 15px;
+    }
+
+    .step {
+      margin-bottom: 20px;
+      padding: 12px;
+      border-left: 4px solid #3498db;
+      background: #ecf5fc;
+      border-radius: 6px;
+    }
+
+   
+    #solution, #resultado {
+      background: #f4f6f9;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: "Courier New", monospace;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Métodos Numéricos</h2>
+
+  
+  <div id="menu">
+    <button onclick="mostrar('gauss')">Método de Eliminação de Gauss</button>
+    <button onclick="mostrar('bissecao')">Método da Bisseção</button>
+  </div>
+
+  
+  <div id="gauss">
+    <h3>Eliminação de Gauss</h3>
+    <label>Digite o número de equações:</label>
+    <input type="number" id="numEquacoes" min="2" max="1000" value="3" />
+    <button onclick="criarMatriz()">Criar Matriz</button>
+    <div id="matriz"></div>
+    <button onclick="resolverGauss()">Resolver</button>
+    <div id="steps"></div>
+    <h3>Resposta Final:</h3>
+    <div id="solution"></div>
+    <br>
+    <button onclick="voltarMenu()">⬅ Voltar ao Menu</button>
+  </div>
+
+
+  <div id="bissecao">
+    <h3>Método da Bisseção</h3>
+    <label for="func">Função f(x):</label>
+    <input type="text" id="func" placeholder="Ex: x**3 - 9*x + 3" />
+
+    <label for="erro">Taxa de erro (tolerância):</label>
+    <input type="number" id="erro" placeholder="Ex: 0.000001" step="any" value="0.0000001" />
+
+    <button onclick="encontrarZeros()">Encontrar Zeros</button>
+
+    <h3>Resultado:</h3>
+    <pre id="resultado"></pre>
+    <br>
+    <button onclick="voltarMenu()">⬅ Voltar ao Menu</button>
+  </div>
+
+  <script>
+    function mostrar(id) {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("gauss").style.display = "none";
+      document.getElementById("bissecao").style.display = "none";
+      document.getElementById(id).style.display = "block";
+    }
+
+    function voltarMenu() {
+      document.getElementById("menu").style.display = "block";
+      document.getElementById("gauss").style.display = "none";
+      document.getElementById("bissecao").style.display = "none";
+    }
+
+    function criarMatriz() {
+      const n = parseInt(document.getElementById("numEquacoes").value);
+      let html = "<table>";
+      for (let i = 0; i < n; i++) {
+        html += "<tr>";
+        for (let j = 0; j <= n; j++) {
+          html += `<td><input type='number' id='cell-${i}-${j}' style='width:70px'></td>`;
+        }
+        html += "</tr>";
+      }
+      html += "</table>";
+      document.getElementById("matriz").innerHTML = html;
+    }
+
+    function resolverGauss() {
+      const n = parseInt(document.getElementById("numEquacoes").value);
+      let A = [];
+      for (let i = 0; i < n; i++) {
+        A[i] = [];
+        for (let j = 0; j <= n; j++) {
+          A[i][j] = parseFloat(document.getElementById(`cell-${i}-${j}`).value) || 0;
+        }
+      }
+
+      let stepsHtml = "";
+      let totalMultiplicadores = 0;
+
+      for (let k = 0; k < n - 1; k++) {
+        for (let i = k + 1; i < n; i++) {
+          let m = A[i][k] / A[k][k];
+          totalMultiplicadores++;
+          for (let j = k; j <= n; j++) {
+            A[i][j] -= m * A[k][j];
+          }
+          stepsHtml += `<div class="step"><b>Etapa ${k + 1}, Linha ${i + 1}:</b><br>Multiplicador m = ${m.toFixed(4)}<br>${formatMatrix(A)}</div>`;
+        }
+      }
+
+      let X = new Array(n).fill(0);
+      for (let i = n - 1; i >= 0; i--) {
+        let sum = A[i][n];
+        for (let j = i + 1; j < n; j++) {
+          sum -= A[i][j] * X[j];
+        }
+        X[i] = sum / A[i][i];
+      }
+
+      document.getElementById("steps").innerHTML = stepsHtml + `<p><b>Total de multiplicadores:</b> ${totalMultiplicadores}</p>`;
+      document.getElementById("solution").innerHTML = X.map((x, i) => `x${i + 1} = ${x.toFixed(6)}`).join("<br>");
+    }
+
+    function formatMatrix(A) {
+      let html = "<table class='matrix'>";
+      for (let i = 0; i < A.length; i++) {
+        html += "<tr>";
+        for (let j = 0; j < A[i].length; j++) {
+          html += `<td>${A[i][j].toFixed(2)}</td>`;
+        }
+        html += "</tr>";
+      }
+      html += "</table>";
+      return html;
+    }
+
+    function bisseccao(f, a, b, tolerancia = 1e-7, maxIter = 100) {
+      if (f(a) * f(b) >= 0) return null;
+      let c, erro, iter = 0;
+      while ((b - a) / 2 > tolerancia && iter < maxIter) {
+        c = (a + b) / 2;
+        erro = Math.abs(b - a) / 2;
+        if (f(c) === 0 || erro < tolerancia) break;
+        if (f(a) * f(c) < 0) b = c;
+        else a = c;
+        iter++;
+      }
+      return { raiz: c, erro: erro, iteracoes: iter, intervalo: [a, b] };
+    }
+
+    function encontrarZeros() {
+      const inputFunc = document.getElementById("func").value;
+      const tolerancia = parseFloat(document.getElementById("erro").value) || 1e-7;
+      const output = document.getElementById("resultado");
+      output.textContent = "";
+
+      let f;
+      try {
+        f = new Function("x", "return " + inputFunc);
+        f(0);
+      } catch (e) {
+        output.textContent = "Erro na função: " + e.message;
+        return;
+      }
+
+      const a = -100, b = 100;
+      const zeros = [];
+      for (let x1 = a; x1 < b; x1++) {
+        let x2 = x1 + 1, y1 = f(x1), y2 = f(x2);
+        if (!isFinite(y1) || !isFinite(y2)) continue;
+        if (y1 * y2 < 0) {
+          const resultado = bisseccao(f, x1, x2, tolerancia);
+          if (resultado) {
+            const r = resultado.raiz;
+            if (!zeros.some(z => Math.abs(z - r) < tolerancia)) {
+              zeros.push(r);
+              output.textContent +=
+                `Intervalo inicial: [${x1}, ${x2}] | Raiz: x ≈ ${r.toFixed(10)} | ` +
+                `Erro ≈ ${resultado.erro.toExponential(2)} | Iterações: ${resultado.iteracoes}\n`;
+            }
+          }
+        }
+      }
+      if (zeros.length === 0) output.textContent = "Nenhuma raiz encontrada no intervalo [-100, 100].";
+    }
+  </script>
+</body>
+</html>
