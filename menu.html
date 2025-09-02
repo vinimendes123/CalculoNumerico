@@ -70,7 +70,6 @@
       box-shadow: 0 0 5px rgba(52,152,219,0.4);
     }
 
-    
     #gauss, #bissecao {
       display: none;
       background: white;
@@ -80,7 +79,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-   
     table {
       border-collapse: collapse;
       margin: 15px 0;
@@ -105,7 +103,6 @@
       border-radius: 6px;
     }
 
-   
     #solution, #resultado {
       background: #f4f6f9;
       padding: 12px;
@@ -120,13 +117,11 @@
 <body>
   <h2>Métodos Numéricos</h2>
 
-  
   <div id="menu">
     <button onclick="mostrar('gauss')">Método de Eliminação de Gauss</button>
     <button onclick="mostrar('bissecao')">Método da Bisseção</button>
   </div>
 
-  
   <div id="gauss">
     <h3>Eliminação de Gauss</h3>
     <label>Digite o número de equações:</label>
@@ -140,7 +135,6 @@
     <br>
     <button onclick="voltarMenu()">⬅ Voltar ao Menu</button>
   </div>
-
 
   <div id="bissecao">
     <h3>Método da Bisseção</h3>
@@ -200,6 +194,20 @@
       let totalMultiplicadores = 0;
 
       for (let k = 0; k < n - 1; k++) {
+        // Pivotamento parcial
+        let maxRow = k;
+        for (let i = k + 1; i < n; i++) {
+          if (Math.abs(A[i][k]) > Math.abs(A[maxRow][k])) {
+            maxRow = i;
+          }
+        }
+        if (maxRow !== k) {
+          let temp = A[k];
+          A[k] = A[maxRow];
+          A[maxRow] = temp;
+          stepsHtml += `<div class="step"><b>Troca de linha ${k + 1} com linha ${maxRow + 1}</b><br>${formatMatrix(A)}</div>`;
+        }
+
         for (let i = k + 1; i < n; i++) {
           let m = A[i][k] / A[k][k];
           totalMultiplicadores++;
